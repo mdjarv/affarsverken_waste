@@ -1,0 +1,12 @@
+{
+  "domain": "affarsverken_waste",
+  "name": "Affärsverken Waste Collection",
+  "codeowners": ["@mdjarv"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/mdjarv/affarsverken_waste",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/mdjarv/affarsverken_waste/issues",
+  "requirements": ["requests", "PyJWT"],
+  "version": "0.1.0"
+}
