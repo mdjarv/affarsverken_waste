@@ -3,10 +3,11 @@
   "name": "Affärsverken Waste Collection",
   "codeowners": ["@mdjarv"],
   "config_flow": true,
-  "dependencies": [],
-  "documentation": "https://github.com/mdjarv/affarsverken_waste",
-  "iot_class": "cloud_polling",
+  "documentation": "https://github.com/mdjarv/affarsverken_waste/blob/main/README.md",
   "issue_tracker": "https://github.com/mdjarv/affarsverken_waste/issues",
+  "dependencies": [],
   "requirements": ["requests", "PyJWT"],
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "iot_class": "cloud_polling",
+  "single_config_entry": false
 }
