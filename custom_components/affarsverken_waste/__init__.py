@@ -1,4 +1,5 @@
 """The Affärsverken Waste Collection integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -24,9 +25,7 @@ class RuntimeData:
 type AffarsverkenWasteConfigEntry = ConfigEntry[RuntimeData]
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: AffarsverkenWasteConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AffarsverkenWasteConfigEntry) -> bool:
     """Set up Affärsverken Waste from a config entry."""
     address = entry.data[CONF_ADDRESS]
     store: Store = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}")
@@ -40,8 +39,6 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: AffarsverkenWasteConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AffarsverkenWasteConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

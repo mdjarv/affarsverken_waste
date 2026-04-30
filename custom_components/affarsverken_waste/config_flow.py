@@ -1,4 +1,5 @@
 """Config flow for Affärsverken Waste Collection."""
+
 from __future__ import annotations
 
 import logging
@@ -28,9 +29,7 @@ class AffarsverkenWasteConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is None:
             return self._show_form()
 
@@ -60,14 +59,12 @@ class AffarsverkenWasteConfigFlow(ConfigFlow, domain=DOMAIN):
         except ApiError as err:
             _LOGGER.warning("Validation failed for %s: %s", address, err)
             return "cannot_connect"
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.exception("Unexpected error validating address")
             return "unknown"
         return None
 
-    def _show_form(
-        self, errors: dict[str, str] | None = None
-    ) -> ConfigFlowResult:
+    def _show_form(self, errors: dict[str, str] | None = None) -> ConfigFlowResult:
         return self.async_show_form(
             step_id="user",
             data_schema=DATA_SCHEMA,

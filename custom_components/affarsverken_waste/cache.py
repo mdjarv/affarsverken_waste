@@ -3,6 +3,7 @@
 Wraps `homeassistant.helpers.storage.Store` with typed accessors so the API
 client doesn't sling around a `dict[str, Any]` whose keys are stringly defined.
 """
+
 from __future__ import annotations
 
 import logging

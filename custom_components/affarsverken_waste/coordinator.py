@@ -1,4 +1,5 @@
 """Coordinator for Affärsverken Waste Collection."""
+
 from __future__ import annotations
 
 import logging

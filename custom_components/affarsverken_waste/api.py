@@ -3,6 +3,7 @@
 This layer is pure transport: cache logic lives in `cache.py`, payload parsing
 in `parsers.py`. Anything domain-stable belongs in those modules, not here.
 """
+
 from __future__ import annotations
 
 import logging
@@ -102,9 +103,7 @@ class AffarsverkenWasteApiClient:
             "Accept": "application/json",
         }
         try:
-            async with self._session.get(
-                url, headers=headers, timeout=_TIMEOUT
-            ) as resp:
+            async with self._session.get(url, headers=headers, timeout=_TIMEOUT) as resp:
                 if resp.status in _AUTH_FAIL_STATUSES:
                     raise AuthError(f"Token rejected: HTTP {resp.status}")
                 resp.raise_for_status()

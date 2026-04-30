@@ -1,3 +1,27 @@
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+# Conservative selection — fast wins without bikeshedding on style.
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes (unused imports/vars)
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear (likely bugs)
+    "SIM", # flake8-simplify
+    "RUF", # ruff-native rules
+]
+ignore = [
+    "E501",  # line too long — let formatter handle
+    "B008",  # function calls in arg defaults — common HA pattern (timedelta defaults)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]  # asserts in tests are fine

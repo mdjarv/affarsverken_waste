@@ -16,6 +16,7 @@ Two jobs:
    const) never touch HA themselves — the stubs only need to satisfy
    ``__init__.py``'s import side effects.
 """
+
 from __future__ import annotations
 
 import sys

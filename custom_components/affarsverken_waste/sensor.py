@@ -1,4 +1,5 @@
 """Sensor platform for Affärsverken Waste Collection."""
+
 from __future__ import annotations
 
 import logging
@@ -11,7 +12,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util import dt as dt_util
+from homeassistant.util import slugify
 
 from . import AffarsverkenWasteConfigEntry
 from .const import DOMAIN
@@ -50,9 +52,7 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_add_new_entities))
 
 
-class AffarsverkenWasteSensor(
-    CoordinatorEntity[AffarsverkenWasteCoordinator], SensorEntity
-):
+class AffarsverkenWasteSensor(CoordinatorEntity[AffarsverkenWasteCoordinator], SensorEntity):
     """Sensor for one waste collection type at one address."""
 
     _attr_device_class = SensorDeviceClass.DATE

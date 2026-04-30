@@ -3,6 +3,7 @@
 Kept HA-free so the logic is unit-testable without spinning up a HomeAssistant
 instance.
 """
+
 from __future__ import annotations
 
 import hashlib

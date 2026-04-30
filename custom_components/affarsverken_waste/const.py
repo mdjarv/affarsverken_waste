@@ -1,4 +1,5 @@
 """Constants for the Affärsverken Waste Collection integration."""
+
 from datetime import timedelta
 
 DOMAIN = "affarsverken_waste"

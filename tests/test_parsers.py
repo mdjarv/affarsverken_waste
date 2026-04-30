@@ -1,4 +1,5 @@
 """Tests for pure parsers."""
+
 from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta
@@ -59,9 +60,7 @@ class TestParseCollectionDates:
     def test_ignores_extra_fields(self):
         # Real responses include irrelevant keys; we should not choke on them.
         payload = {
-            "services": [
-                {"title": "Restavfall", "nextPickup": "2026-05-15", "foo": "bar"}
-            ],
+            "services": [{"title": "Restavfall", "nextPickup": "2026-05-15", "foo": "bar"}],
             "buildingId": 123,
         }
         assert parse_collection_dates(payload) == {"Restavfall": date(2026, 5, 15)}

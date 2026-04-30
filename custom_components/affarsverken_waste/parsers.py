@@ -2,6 +2,7 @@
 
 No HA imports, no I/O — keeps this layer trivially testable.
 """
+
 from __future__ import annotations
 
 import logging
