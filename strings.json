@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Affärsverken Waste Collection",
+        "description": "Enter your address as recognized by Affärsverken (e.g. \"Drottninggatan 1\").",
+        "data": {
+          "address": "Address",
+          "name": "Name"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Affärsverken. Check your internet connection and try again.",
+      "invalid_auth": "Affärsverken rejected the request.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This address is already configured."
+    }
+  }
+}

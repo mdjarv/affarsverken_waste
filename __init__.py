@@ -1,23 +1,47 @@
 """The Affärsverken Waste Collection integration."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
 
-DOMAIN = "affarsverken_waste"
+from .api import AffarsverkenWasteApiClient
+from .const import DOMAIN, STORAGE_VERSION
+from .coordinator import AffarsverkenWasteCoordinator
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+
+@dataclass
+class RuntimeData:
+    client: AffarsverkenWasteApiClient
+    coordinator: AffarsverkenWasteCoordinator
+
+
+type AffarsverkenWasteConfigEntry = ConfigEntry[RuntimeData]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: AffarsverkenWasteConfigEntry
+) -> bool:
     """Set up Affärsverken Waste from a config entry."""
-    # This method will be called when a config entry is loaded (e.g., after UI setup or HA restart).
-    # It will forward the setup to the sensor platform.
-    # Corrected method name from async_forward_entry_setup to async_forward_entry_setups
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setups(entry, ["sensor"]) # Note: it expects a list of platforms
-    )
+    address = entry.data[CONF_ADDRESS]
+    store: Store = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}")
+    client = AffarsverkenWasteApiClient(hass, store)
+    coordinator = AffarsverkenWasteCoordinator(hass, entry, client, address)
+
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = RuntimeData(client=client, coordinator=coordinator)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_unload_entry(
+    hass: HomeAssistant, entry: AffarsverkenWasteConfigEntry
+) -> bool:
     """Unload a config entry."""
-    # This method will be called when a config entry is unloaded (e.g., when deleted from UI).
-    # It will forward the unload to the sensor platform.
-    return await hass.config_entries.async_forward_entry_unload(entry, "sensor")
-
-
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

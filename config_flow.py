@@ -1,48 +1,72 @@
+"""Config flow for Affärsverken Waste Collection."""
+from __future__ import annotations
+
+import logging
+from typing import Any
+
 import voluptuous as vol
-
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
-from homeassistant.core import callback
+from homeassistant.helpers.storage import Store
 
-from . import DOMAIN # Import the domain from __init__.py
+from .api import AffarsverkenWasteApiClient, ApiError, AuthError
+from .const import DOMAIN, STORAGE_VERSION
 
-class AffarsverkenWasteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+_LOGGER = logging.getLogger(__name__)
+
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ADDRESS): str,
+        vol.Optional(CONF_NAME): str,
+    }
+)
+
+
+def _normalize_address(address: str) -> str:
+    return " ".join(address.split()).lower()
+
+
+class AffarsverkenWasteConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Affärsverken Waste Collection."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
-        """Handle the initial step."""
-        errors = {}
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Here, you would typically validate the user_input against the API
-            # For this simple example, we'll assume it's valid for now.
-            
-            address = user_input[CONF_ADDRESS]
-            name = user_input.get(CONF_NAME, address) # Default name to address if not provided
+            address = user_input[CONF_ADDRESS].strip()
+            name = user_input.get(CONF_NAME, address).strip()
+            user_input[CONF_ADDRESS] = address
+            user_input[CONF_NAME] = name
 
-            # Create a unique ID for this config entry.
-            # This is important for linking the config entry to its device.
-            unique_id = f"{DOMAIN}_{address.replace(' ', '_').lower()}"
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured() # Prevent duplicate entries for the same address
-
-            return self.async_create_entry(
-                title=f"{name} Waste Collection", # Title for the integration instance
-                data=user_input, # Store the address and name in the config entry
+            await self.async_set_unique_id(
+                f"{DOMAIN}_{_normalize_address(address).replace(' ', '_')}"
             )
+            self._abort_if_unique_id_configured()
 
-        # Show the form to the user
-        data_schema = vol.Schema({
-            vol.Required(CONF_ADDRESS): str,
-            vol.Optional(CONF_NAME): str,
-        })
+            store = Store(self.hass, STORAGE_VERSION, f"{DOMAIN}.validate")
+            client = AffarsverkenWasteApiClient(self.hass, store)
+            try:
+                await client.async_validate(address)
+            except AuthError:
+                errors["base"] = "invalid_auth"
+            except ApiError as err:
+                _LOGGER.warning("Validation failed for %s: %s", address, err)
+                errors["base"] = "cannot_connect"
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("Unexpected error validating address")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(
+                    title=f"{name} Waste Collection",
+                    data=user_input,
+                )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=data_schema,
+            data_schema=DATA_SCHEMA,
             errors=errors,
         )
-
-
