@@ -34,10 +34,6 @@ class AffarsverkenWasteCoordinator(DataUpdateCoordinator[dict[str, date]]):
         self._client = client
         self._address = address
 
-    @property
-    def address(self) -> str:
-        return self._address
-
     async def _async_update_data(self) -> dict[str, date]:
         try:
             return await self._client.async_get_collection_dates(self._address)
