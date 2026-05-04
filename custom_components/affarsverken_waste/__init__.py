@@ -54,30 +54,32 @@ async def async_unload_entry(hass: HomeAssistant, entry: AffarsverkenWasteConfig
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old config entry data forward.
 
-    v1 → v2: the address slug used in entity unique_ids and device identifiers
-    is now derived from the normalized address (lowercased, whitespace
-    collapsed) instead of the raw user input. Re-anchor existing registry
-    rows so users keep their entity_ids and history, and drop any orphan
-    rows the post-upgrade load created under the new id.
+    v1 → v2: entity unique_id slug switched from md5(raw_address) to
+    md5(normalized_address); rename old rows and drop any orphan new-id
+    rows the post-upgrade load created.
+
+    v2 → v3: legacy device identifier was (DOMAIN, raw_address); v0.2.0
+    introduced (DOMAIN, address_slug) as a *new* device alongside the
+    legacy one, leaving two devices per entry. Collapse to one and
+    preserve user-set area / name from whichever side has them.
+
+    Both steps are idempotent and run from any prior version because
+    v0.2.1's migration mistakenly bumped entries to version=2 without
+    cleaning up the legacy device.
     """
-    if entry.version >= 2:
+    if entry.version >= 3:
         return True
 
     address = entry.data[CONF_ADDRESS]
-    old_hash = hashlib.md5(address.encode(), usedforsecurity=False).hexdigest()[:8]
     new_hash = address_slug(address)
+    old_hash = hashlib.md5(address.encode(), usedforsecurity=False).hexdigest()[:8]
 
     if old_hash != new_hash:
         _migrate_entities(hass, entry, old_hash, new_hash)
-        _migrate_device(hass, entry, old_hash, new_hash)
-        _LOGGER.info(
-            "Migrated affarsverken_waste entry %s: %s → %s",
-            entry.entry_id,
-            old_hash,
-            new_hash,
-        )
+    _migrate_devices(hass, entry, new_hash)
 
-    hass.config_entries.async_update_entry(entry, version=2)
+    hass.config_entries.async_update_entry(entry, version=3)
+    _LOGGER.info("Migrated affarsverken_waste entry %s to v3", entry.entry_id)
     return True
 
 
@@ -103,16 +105,41 @@ def _migrate_entities(
         registry.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
 
 
-def _migrate_device(hass: HomeAssistant, entry: ConfigEntry, old_hash: str, new_hash: str) -> None:
+def _migrate_devices(hass: HomeAssistant, entry: ConfigEntry, new_hash: str) -> None:
     registry = dr.async_get(hass)
-    old_id = (DOMAIN, old_hash)
-    new_id = (DOMAIN, new_hash)
+    new_identifier = (DOMAIN, new_hash)
 
-    old_device = registry.async_get_device(identifiers={old_id})
-    if old_device is None:
+    devices = list(dr.async_entries_for_config_entry(registry, entry.entry_id))
+    canonical: dr.DeviceEntry | None = None
+    legacy: list[dr.DeviceEntry] = []
+    for device in devices:
+        if new_identifier in device.identifiers:
+            canonical = device
+        else:
+            legacy.append(device)
+
+    if not legacy:
         return
 
-    new_device = registry.async_get_device(identifiers={new_id})
-    if new_device is not None and new_device.id != old_device.id:
-        registry.async_remove_device(new_device.id)
-    registry.async_update_device(old_device.id, new_identifiers={new_id})
+    if canonical is None:
+        # Single legacy device (no canonical existed yet) — re-anchor it.
+        keeper = legacy.pop(0)
+        registry.async_update_device(keeper.id, new_identifiers={new_identifier})
+        canonical = keeper
+
+    # Lift user-set area and name from legacy onto canonical when canonical
+    # is missing them — first legacy with a value wins. Anything the user
+    # explicitly set on canonical is preserved.
+    if canonical.area_id is None:
+        for device in legacy:
+            if device.area_id is not None:
+                registry.async_update_device(canonical.id, area_id=device.area_id)
+                break
+    if canonical.name_by_user is None:
+        for device in legacy:
+            if device.name_by_user is not None:
+                registry.async_update_device(canonical.id, name_by_user=device.name_by_user)
+                break
+
+    for device in legacy:
+        registry.async_remove_device(device.id)
