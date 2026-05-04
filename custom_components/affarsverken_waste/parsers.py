@@ -35,7 +35,7 @@ def parse_collection_dates(payload: dict[str, Any]) -> dict[str, date]:
         if not title or not next_pickup:
             continue
         try:
-            dates[title] = datetime.strptime(next_pickup, "%Y-%m-%d").date()
+            dates[title] = date.fromisoformat(next_pickup)
         except ValueError:
             _LOGGER.warning("Unparseable date %s for %s", next_pickup, title)
     return dates

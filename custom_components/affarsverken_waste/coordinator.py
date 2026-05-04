@@ -31,6 +31,7 @@ class AffarsverkenWasteCoordinator(DataUpdateCoordinator[dict[str, date]]):
             name=f"{DOMAIN} {address}",
             config_entry=entry,
             update_interval=SCAN_INTERVAL,
+            always_update=False,
         )
         self._client = client
         self._address = address

@@ -22,6 +22,8 @@ from .helpers import address_slug, build_pickup_attributes
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -57,7 +59,7 @@ class AffarsverkenWasteSensor(CoordinatorEntity[AffarsverkenWasteCoordinator], S
 
     _attr_device_class = SensorDeviceClass.DATE
     _attr_icon = "mdi:trash-can"
-    _attr_has_entity_name = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -71,11 +73,11 @@ class AffarsverkenWasteSensor(CoordinatorEntity[AffarsverkenWasteCoordinator], S
         self._waste_type = waste_type
 
         slug = address_slug(address)
-        self._attr_name = f"{base_name} {waste_type}"
+        self._attr_name = waste_type
         self._attr_unique_id = f"{DOMAIN}_{slug}_{slugify(waste_type)}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, slug)},
-            name=f"Waste Collection - {address}",
+            name=base_name,
             manufacturer="Affärsverken",
             model="Waste Collection",
         )

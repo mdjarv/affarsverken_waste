@@ -18,7 +18,7 @@ def normalize_address(address: str) -> str:
 
 def address_slug(address: str, length: int = 8) -> str:
     """Short stable slug derived from the normalized address."""
-    digest = hashlib.md5(normalize_address(address).encode()).hexdigest()
+    digest = hashlib.md5(normalize_address(address).encode(), usedforsecurity=False).hexdigest()
     return digest[:length]
 
 

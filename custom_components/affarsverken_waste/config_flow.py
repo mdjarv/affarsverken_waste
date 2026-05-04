@@ -62,6 +62,8 @@ class AffarsverkenWasteConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:
             _LOGGER.exception("Unexpected error validating address")
             return "unknown"
+        finally:
+            await store.async_remove()
         return None
 
     def _show_form(self, errors: dict[str, str] | None = None) -> ConfigFlowResult:
